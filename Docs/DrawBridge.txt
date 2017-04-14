@@ -1,0 +1,79 @@
+Actor CarDispatcher
+{
+	int totalCars = k;
+	
+	Disptach()
+	{
+		totalCars = totalCars -1;
+		DrawBridge.EnqueueCar();
+		if(totalCars>0)
+		{
+			Delay(p);
+			self.Disptach();
+		}
+	}
+}
+
+Actor DrawBridge
+{
+	int cars = 0;
+	bool bridgeStatus = 0;
+	real timer = 0;
+	real degree = 90;
+	
+	EnqueueCar()
+	{
+		cars = cars +1;
+		if(bridgeStatus == 0)
+		{
+			self.StartLowering();
+		}
+	}
+	StartLowering()
+	{
+		if(bridgeStatus == 0)
+		{
+			bridgeStatus = 1;
+			inv(degree>=0)
+				degree'= -10;
+			guard(degree == 0)
+			{
+				bridgeStatus = 2;
+				self.PassACar();
+			}
+		}
+	}
+	
+	StartRaising()
+	{
+		bridgeStatus = 1;
+		inv(degree<=90)
+			degree'= degree/100;
+		guard(degree == 90)
+		{
+			bridgeStatus = 0;
+			if(cars > 0)
+				self.StartLowering();
+		}
+	}
+	
+	PassACar()
+	{
+		inv(timer<=d)
+			timer'=1;
+		guard(timer == d)
+		{
+			timer = 0;
+			cars = cars-1;
+			if(cars <= 0)
+				self.StartRaising();
+			else
+				self.PassACar();
+		}
+	}
+}
+
+main
+{
+	CarDispatcher.Disptach();
+}

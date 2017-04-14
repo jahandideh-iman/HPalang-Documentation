@@ -1,0 +1,30 @@
+actor Filler
+{
+	real v;
+	bool mustStop = false;
+	
+	Fill300()
+	{
+		inv(v <= 300 && mustStop == false)
+			v'=100;
+		guard(v == 300 || mustStop == true)
+		{
+			v = 0;
+			if(mustStop == true && v > 0)
+				self.ThrowAwayCup();
+			if(mustStop == false)
+				Machine.Filled();
+		}
+	}
+	
+	Fill200()
+	{
+		inv(v<= 200)
+			v'=100;
+		guard(v == 200)
+		{
+			v = 0;
+			Machine.Filled();
+		}
+	}
+}

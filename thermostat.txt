@@ -1,0 +1,108 @@
+
+reactive Thermostat
+{
+	real x;
+	real u;
+	int mode;
+	
+	Evole()
+	{
+		if(mode ==1 )
+			inv : x <= u -> Evo: x' = -x + u;
+			if(x >= 18) 
+				mode = 0;
+		
+		if (mode == 0)
+			inv : x >= u ->  Evo: x' = -x + u;
+			if(x <= 2)
+				mode = 1;
+	}
+}
+
+reactive Thermostat
+{
+	real x;
+	real u;
+	int mode;
+	
+	Initial()
+	{
+		self.TurnOn();
+	}
+	Evole()
+	{
+		if(mode ==1 && x <= u)
+			x' = -x + u;
+			if(x >= 18) 
+				mode = 0;
+		
+		if (mode == 0 && x >= u )
+			Evo: x' = -x + u;
+			if(x <= 2)
+				mode = 1;
+	}
+	
+	TurnOn()
+	{
+		Evole(x' = -x + u;) Until(x <= u);
+		
+		mode = 1;
+		
+		if(x >= 18) 
+			self.TurnOff();
+	}
+	
+	
+}
+
+reactive Thermostat
+{
+	real x;
+	real u;
+
+	Initial()
+	{
+		self.TurnOn();
+	}
+	
+	
+	TurnOn() @Continuous
+	{
+		if(x <= u )
+			x' = -x + u;
+		if(x >= 18) 
+			self.TurnOff();
+	}
+	
+	TurnOn()
+	{
+		if(x<=u)
+			self.TurnOn();
+		else
+			self.TurnOn2();
+	}
+	
+	TurnOff() @Continuous
+	{
+		if(x>=u )
+			x' = -x + u;
+		if(x <= 2) 
+			self.TurnOn();
+	}
+	
+	Setup(int goalTemp)
+	{
+	}
+	
+	Start()
+	{
+		if(x <= u )
+			x' = -x + u;
+		if(x >= 18) 
+			listener.TurnOff();
+		if(x>=u )
+			x' = -x + u;
+		if(x <= 2) 
+			listener.TurnOn();
+	}	
+}

@@ -1,0 +1,39 @@
+actor Filler
+{
+	real h;
+	bool mustCancel = false;
+	
+	Fill300()
+	{
+		h = 0;
+		inv(h <= 300 && mustCancel == false)
+			h'=100;
+		guard(h == 300 || mustCancel == true)
+		{
+			if(mustCancel == true && h > 0) // Throw away the cup if there is drink in the cup
+				self.ThrowAwayCup();			
+			if(mustCancel == false) // if the cup is filled successfully
+				Machine.Filled();
+		}
+	}
+	
+	// This method must be modfied like Fill300
+	Fill200()
+	{
+		h = 0;
+		inv(h<= 200)
+			h'=100;
+		guard(h == 200)
+			Machine.Filled();
+	}
+	
+	Cancel()
+	{
+		mustCancel = true;
+	}
+	
+	ThrowAwayCup()
+	{
+		// Throw away the cup
+	}
+}

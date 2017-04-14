@@ -1,0 +1,92 @@
+actor Pourer
+{
+	real H;
+	Pour30()@Continuous
+	{
+		if(H<= 30)
+			H'=20;
+		if(H == 30)
+			m.CupFilled();
+	}
+	
+	Pour20()@Continuous
+	{
+		if(H<= 20)
+			H'=20;
+		if(H == 20)
+			m.CupFilled();
+	}
+}
+
+actor Heater
+{
+	real T;
+	
+	HeatUp100()
+	{
+		if (T<= 100)
+			T' = (120 - T)/20
+		if(T == 100)
+			m.TemperatureReached();
+	}
+	
+	HeatUp90() @Continuous
+	{
+		if (T<= 90)
+			T' = (120 - T)/20
+		if(T == 90)
+			m.TemperatureReached();
+	}
+}
+
+actor Machine
+{
+	int orderType;
+	TeaButton()
+	{
+		orderType = 1;
+		heater.HeatUp100();
+	}
+	
+	CoffeeButton()
+	{
+		orderType = 2;
+		heater.HeatUp90();
+	}
+	
+	TemperatureReached()
+	{
+		if(orderType == 1)
+			pourer.Pour30();
+		else
+			pourer.Pour20();
+	}
+	
+	CupFilled()
+	{
+		User.Order();
+	}
+}
+
+actor User
+{
+	// OrderCoffee()
+	// {
+		// Machine.CoffeeButton();
+	// }
+	
+	Order()
+	{
+		int x ? [0,1];
+		if(x == 1)
+			Machine.CoffeeButton();
+		else
+			Machine.TeaButton();
+	}
+	
+}
+
+main
+{
+	User.Order();
+}

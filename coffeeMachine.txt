@@ -1,0 +1,165 @@
+reactive Pourer
+{
+	real H;
+	real goalH;
+	Evole()
+	{
+		inv : H<= goalH -> Evo: H'=20
+		if(H == goalH)
+			m.CupFilled();
+	}
+	
+	Reset()
+	{
+		H=0;
+	}
+}
+
+reactive Heater
+{
+	real T;
+	real goalT;
+	Evole()
+	{
+		inv: T<= goalT -> Evo: T' = (120 - T)/20
+		if(T == goalT)
+			m.TemperatureReached();
+	}
+	
+	Reset()
+	{
+		T = 20;
+	}
+	
+	SetGoal(real goal)
+	{
+		goalT = goal;
+	}
+}
+
+reactive Pourer
+{
+	real H;
+	real goalH;
+	Evole()
+	{
+		inv : H<= goalH -> Evo: H'=20
+		if(H == goalH)
+			m.CupFilled();
+	}
+	
+	Reset()
+	{
+		H=0;
+	}
+}
+
+reactive Heater
+{
+	real T;
+	real goalT;
+	HeatUp() @Continuous
+	{
+		if (T<= goalT)
+			T' = (120 - T)/20
+		if(T == goalT)
+			m.TemperatureReached();
+	}
+	
+	
+	Reset()
+	{
+		T = 20;
+	}
+	
+	SetGoal(real goal)
+	{
+		goalT = goal;
+	}
+}
+
+reactive Pourer
+{
+	real H;
+	real goalH;
+	Pour()
+	{
+		if(H<= goalH)
+			H'=20;
+		if(H == goalH)
+			m.CupFilled();
+	}
+	
+	Reset()
+	{
+		H=0;
+	}
+}
+
+reactive Machine { Heater heater, Pourer pourer}
+{
+	int orderType;
+	TeaButton()
+	{
+		heater.SetGoal(100);
+		heater.HeatUp();
+		orderType = 1;
+	}
+	
+	CoffeeButton()
+	{
+		heater.SetGoal(90);
+		heater.HeatUp();
+		orderType = 2;
+	}
+	
+	TemperatureReached()
+	{
+		if(orderType == 1)
+			pourer.SetGoal(30)
+		else
+			pourer.SetGoal(20)
+			
+		pourer.Pour();
+	}
+	
+	CupFilled()
+	{
+		Deliver();
+	}
+}
+
+reactive MonolithicCoffeeMachine
+{
+	real T, H, goalT, goalH;
+	
+	TeaButton()
+	{
+		goalT = 100;
+		goalH = 30;
+		self.HeatUp();
+	}
+	
+	HeatUp() @Continuous
+	{
+		if(T <= goalT)
+			T' = (120 - T)/20
+		if(T == goalT)
+			m.FillCup();
+	}
+	
+	FillCup() @Continuous
+	{
+		if(H <= goalH)
+			H'=20
+		if(H == goalH)
+			Deliver();
+	}
+	
+	CoffeeButton()
+	{
+		heater.SetGoal(90);
+		heater.SetActive(true);
+		orderType = 2;
+	}
+}

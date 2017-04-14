@@ -1,0 +1,54 @@
+actor thermostat
+{
+	real x;
+
+	Initial()
+	{
+		self.TurnOn();
+	}
+	
+	
+	TurnOn() 
+	{
+		if(x <= 100 )
+			x' = -x + 100;
+		if(x >= 18) 
+			self.TurnOff();
+	}
+	
+	TurnOff() 
+	{
+		if(x>=50 )
+			x' = -x + 50;
+		if(x <= 2) 
+			self.TurnOn();
+	}
+	
+}
+
+actor thermostat
+{
+	real x;
+
+	TurnOn() 
+	{
+		if(x <= 100 )
+			x' = -x + 100;
+		if(x >= 18) 
+			self.TurnOff();
+	}
+	
+	TurnOff() 
+	{
+		if(x>=50 )
+			x' = -x + 50;
+		if(x <= 2) 
+			self.TurnOn();
+	}
+	
+}
+
+main
+{
+	thermostat!TurnOn();
+}

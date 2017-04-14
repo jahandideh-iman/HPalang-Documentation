@@ -1,0 +1,27 @@
+<model> ::= <actor>* <main>
+<actor> ::= ‘actor’ <actor-id> ‘{’ 
+		(<state-var> | <method>)* ‘}’
+<state-var > ::= <var-decl > ‘;’
+<var-decl > ::= <type> <var>
+<method> ::= <message> ‘(’‘)’ ‘{’ <stat-list> ‘}’
+<stat-list> ::= (<statement> ‘;’)*
+<statement> ::= <nonblock-stat> | <delay>
+<delay> ::= 'delay' '(' expr ')'
+<nonblock-stat> ::= <c-assignment> |<d-assignment>|
+		<conditional> | <send> | <c-behavior>
+<d-assignment> ::= <var> '=' <dexpr>
+<c-assignment> ::= <var> '=' <cexpr>
+<conditional > ::= ‘if’ ‘(’ <dexpr > ‘)’ 
+		<stat-list> ‘else’ <stat-list>
+<send> ::= <actor-id> ‘.’ <message> ‘(’‘)’
+<c-behavior> ::= 'inv' '('<cexpr>')' '{'<ode-list>'} 
+		'guard' '(' <cexpr> ')' '{' <stat-list> '}'
+<ode-list> ::= (var ‘'’ )*
+<main> ::= ‘main’ ‘{’ (<send> ‘;’)* ‘}’
+<message> ::= <identifier>
+<actor-id> ::= <identifier>
+<var > ::= <identifier>
+<type> ::= ‘int’ | 'real'
+
+
+

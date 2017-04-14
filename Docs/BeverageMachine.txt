@@ -1,0 +1,103 @@
+actor Filler
+{
+	real h;
+	
+	Fill300()
+	{
+		h = 0;
+		inv(h <= 300)
+			h'=100;
+		guard(h == 300)
+			Machine.Filled();
+	}
+	Fill200()
+	{
+		h = 0;
+		inv(h<= 200)
+			h'=100;
+		guard(h == 200)
+			Machine.Filled();
+	}
+	
+}
+
+actor Heater
+{
+	real t;
+	
+	HeatUp100()
+	{
+		t = 0;
+		inv (t<= 100)
+			t' = (120 - t)/20
+		guard(t == 100)
+			Machine.Heated();
+		
+	}
+	HeatUp90()
+	{
+		t = 0;
+		inv(t<= 90)
+			t' = (120 - t)/20
+		guard(t == 90)
+			Machine.Heated();
+		
+	}
+}
+
+actor Machine
+{
+	int order;
+	
+	PrepareTea()
+	{
+		order = 0;
+		Heater.HeatUp100();
+	}
+	PrepareCoffee()
+	{
+		order = 1;
+		Heater.HeatUp90();
+	}
+	
+	Heated()
+	{
+		if(order == 0)
+			Filler.Fill300();
+		else
+			Filler.Fill200();
+	}
+	Filled()
+	{
+		User.RecieveOrder();
+	}
+}
+
+actor User
+{
+	int nextOrder = 0;
+	Order()
+	{
+		if(nextOrder == 1)
+		{
+			Machine.PrepareCoffee();
+			nextOrder = 0;
+		}
+		else
+		{
+			Machine.PrepareTea();
+			nextOrder = 1;
+		}
+	}
+	
+	RecieveOrder()
+	{
+		Delay(1);
+		self.Order();
+	}
+}
+
+main
+{
+	User.Order();
+}

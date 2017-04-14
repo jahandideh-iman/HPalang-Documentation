@@ -1,0 +1,19 @@
+actor Ball
+{
+	real y = h;
+	Fall()
+	{
+		inv(y >=0)
+			y'' = -9.8;
+		guard(y == 0)
+		{
+			y' = a * y';
+			self.Fall();
+		}
+	}
+}
+
+main
+{
+	Ball.Fall();
+}
