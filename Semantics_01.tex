@@ -1,0 +1,319 @@
+\documentclass[]{article}
+\usepackage{amsmath}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+%opening
+\title{}
+\author{}
+
+
+\begin{document}
+\section{Auxiliary Functions}
+body(x\textsubscript{s},m) returns the body of message m in software actor x\textsubscript{s} \\
+highest\_priority\_message(Q) returns the highest priority message from the given queue. \\
+highest\_priority\_packet(B) returns the highest priority packet (sender-message-receiver tuple) from the given buffer. \\ 
+\\
+acquire\_timer(p) acquires a free timer variable from the give variable pool. \\
+release\_timer(t,p) releases timer variable t to the give variable pool. \\
+\\
+is\_direct(x,y) returns true if the x communicates with y directly (e.g. through wire), returns false otherwise. \\
+is\_nat(x,y) returns true if the x communicates with y through NAT, returns false otherwise. \\
+\\
+guard(x\textsubscript{p},m) returns the guard for mode m in the physical actor x\textsubscript{p} \\
+actions(x\textsubscript{p},m) returns the actions for mode m in the physical actor x\textsubscript{p} \\
+\\
+network\_delay(x,m,y) returns the network delay for sending message m from actor x to actor y \\
+\\
+no\_software\_action(gs) returns true if there is no outgoing software action (transition) in state gs. \\
+no\_network\_action(gs) returns true if there is no outgoing network action (transition) in state gs. \\
+\\
+execute(acts,gs) returns global states by executing the given actions on the global state gs. \\
+NOTE: It's not function. It is possible to have multiple global states by executing the actions. \\
+
+\section{Semantics}
+
+\subsection{Global State}
+Global state GS is defined as a tuple (DS,CS,NS,ES). \\
+DS is the discrete state that is the states of all software actors. \\
+CS is the continuous state that is the states of all physical actors.  \\
+NS is the network states that is tuple (B,i) where B is the buffer of current packets and i is a boolean which show where network is idle (ready to send) or not \\
+ES is the events state that is the list of current events and the pool of timer variables. \\
+\\
+The state of a physical actor is its current mode. A mode defines the invariant, ODE, guard and actions. \\
+\\
+An event is a tuple (d,acts) where d is the delay of this event and acts are the actions that are executed when the event is fired. \\
+\\
+$\xrightarrow[s]{}$ is software action \\
+$\xrightarrow[n]{}$ is network action \\
+$\xrightarrow[p]{}$ is physical action \\
+\\
+\subsection{Coarse-Grained Rules} 
+Message Execution (FIFO) \\
+(Labels must be retained for in execute )
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+		DS(x)=(v,m|T,\epsilon) \wedge \neg v(suspended) 
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\xrightarrow[s]{labels}execute(body(x,m),GS[DS\longmapsto DS'])  \\
+	DS' = DS[x\longmapsto (v,T,\epsilon)]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Message Execution (Priority-based)
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v,T,\epsilon) \wedge \neg v(suspended) \\
+	T \neq \epsilon \wedge m = highest\_priority\_message(T)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\xrightarrow[s]{labels}execute(body(x,m),GS[DS\longmapsto DS'])  \\
+	DS' = DS[x\longmapsto (v,T',\epsilon)] \\
+	T' = T \backslash m
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Continuous Behavior Expiration
+\begin{equation}\label{ContinuousBehaviorExpiration}
+\frac
+{
+	\begin{gathered}
+	CS(x)=m \wedge m \neq none \\ 
+	no\_software\_action(GS) \wedge no\_network\_action(GS)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS \xrightarrow[p]{guard(x,m)} execute(actions(x,m),GS[CS\longmapsto CS']) \\
+	CS'= CS[x\longmapsto none]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+CAN Bus 
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	NS = (B,i) \wedge i = true \wedge  no\_software\_action(GS) \ \\
+	(x,m,y) = highest\_priority\_packet(B) \\ 
+	d = network\_delay(x,m,y)  \\ ES = (events,p)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\xrightarrow[n]{}GS[NS\longmapsto NS',ES\longmapsto ES']  \\
+	ES= ES[events \longmapsto events\oplus (d,\{send\_direct(y,m), i = true\})]  \\
+	 NS'= NS[B \longmapsto B\backslash(x,m,y), i \longmapsto false ] \\
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Events
+(How does the variable pool changes?)
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	TS= (events,p) \wedge (d,acts) \in events  \\
+	no\_software\_action(GS) \wedge no\_network\_action(GS) \\
+	timer = acquire\_timer(p)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\xrightarrow[c]{timer = d, timer:=0} execute(acts,GS[ES\longmapsto ES']) \\
+	ES'= [events \longmapsto events \backslash (y,acts), p\longmapsto ... ]
+	\end{gathered}
+}
+\end{equation}
+\subsection{Fine-Grained Rules}
+Go To
+\begin{equation}\label{GoTo}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v,q,(p \ goto \ m')|\sigma) \\
+	 CS(p)=m
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\longmapsto DS^{'}, CS\longmapsto CS^{'})]  \\
+	DS^{'}=DS[x\longmapsto(c,q,\sigma)]  \\ 
+	CS^{'}=CS[p\longmapsto m']
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Delay Statement
+\begin{equation}\label{DelayStatement}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v,q,(delay(d)|\sigma))  \\ ES= (events,p)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\longmapsto DS', TS\longmapsto ES']  \\
+	DS'=DS[x\longmapsto(v[suspended\longmapsto true],q,\sigma)]  \\ 
+	ES'=ES[events \longmapsto events \oplus (d,\{resume(x)\})]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Continuous Variable Assignment 
+\begin{equation}\label{ContinuousVariableAssignment}
+\frac
+{
+	\begin{gathered}
+	...
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{cvar=eval(expr)}{\Rightarrow}GS'
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Discrete Variable Assignment
+\begin{equation}\label{DiscreteVariableAssignment}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v,q,(dvar=expr|\sigma))
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\longmapsto DS']  \\
+	 DS^{'}=DS[x \longmapsto(v[dvar\longmapsto eval(expr)],q,\sigma)]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Conditional True
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v,q,(if \ expr \ \sigma \ else \ \sigma ^{'} |\sigma ^{''})) \\
+	eval(expr) = True
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\ longmapsto DS'] \\
+	 DS^{'}=DS[x \longmapsto(v,q,\sigma \oplus \sigma ^{''})]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Conditional False
+\begin{equation}\label{ConditionalFalse}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v,q,(if \ expr \ \sigma \ else \ \sigma ' |\sigma'')) \\
+	eval(expr) = False
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS \longmapsto DS'] \\
+	DS^{'}=DS[x \longmapsto(v,q,\sigma' \oplus \sigma'')]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Direct Message Send (Software Actor)
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v_x,q_x,((y,m) |\sigma_x)) \\
+	DS(y) = (v_y,q_y,\sigma_y) \\
+	is\_direct(x,y)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\longmapsto DS'] \\
+	DS^{'}=DS[x \longmapsto(v_x,q_x,\sigma_x),y\longmapsto(v_y,q_y \oplus m,\sigma_y) ]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+NAT Message Send (Software Actor)
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	DS(x)=(v_x,q_x,((y,m) |\sigma_x)) \\
+	NS = (B,i) \\
+	is\_nat(x,y)
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\longmapsto DS', NS\longmapsto NS'] \\
+	DS^{'}=DS[x \longmapsto(v_x,q_x,\sigma_x)]\\
+	NS' = NS[B\longmapsto B \oplus (x,y,n)]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+Direct Message Send (Physical Actor)
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	...
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	G\overset{\tau}{\Rightarrow}G[DS\longmapsto DS'] \\
+	DS^{'}=DS[x \longmapsto(v_x,q_x,\sigma_x),y\longmapsto(v_y,q_y \oplus m,\sigma_y) ]
+	\end{gathered}
+}
+\end{equation}
+\\\\
+NAT Message Send (Physical Actor)
+\begin{equation}
+\frac
+{
+	\begin{gathered}
+	...
+	\end{gathered}
+}
+{
+	\begin{gathered}
+	GS\overset{\tau}{\Rightarrow}GS[DS\longmapsto DS', NS\longmapsto NS'] \\
+	NS' = NS[B\longmapsto B \oplus (x,m,y)]
+	\end{gathered}
+}
+\end{equation}
+
+\section{Issues Regarding Formalization of Semantics}
+General statement execution: Currently most statements are define for software actors. But there some statements that are common between software actors and physical actors (e.g. send). Is there any way to statements' semantics generally? \\ \\
+Executing physical actors statements: In software actors we have a execution queue for executing software statements. Should we put a execution queue for physical actors too?\\ \\
+Continuous Message Parameters : How should we deal with continuous parameters in messages? \\ \\
+Defining  Concurrent Continuous behavior expiration detection \\ \\
+Defining the semantics of \textit{execute(acts,gs)} \\\\
+
+\end{document}

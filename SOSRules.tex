@@ -1,0 +1,131 @@
+\documentclass[]{article}
+\usepackage{amsmath}
+
+%opening
+\title{}
+\author{}
+
+
+\begin{document}
+
+
+Message Execution
+(Retain the labels for $\Rightarrow ^{*}$ )
+\begin{equation}\label{MessageExecution}
+\frac
+{
+	\begin{aligned}
+		DS(x)=(v,m|T,\epsilon) \wedge \neg v(suspended) \wedge  DS^{'}(x)=(v^{'},q^{'},\epsilon) \wedge \\
+	\forall i \in ID\backslash \{x\} (DS(i) = (v^{''},q^{''},\epsilon) \wedge DS^{'}(i)=(v^{''},q^{*},\epsilon)) \wedge \\
+	DS[x\longmapsto(v,T,body(m))]\Rightarrow ^{*} DS^{'}
+	\end{aligned}
+}
+{
+	G\underset{S}{\rightarrow}G[DS\longmapsto DS^{'}]
+}
+\end{equation}
+
+Continuous Behavior Expiration
+(How to executed actions?)
+\begin{equation}\label{ContinuousBehaviorExpiration}
+\frac
+{
+	CS(x)=(m,\epsilon) \wedge m \neq none
+}
+{
+	\begin{aligned}
+	G\overset{guard(m)}{\rightarrow}G[DS\longmapsto DS^{'} ,CS\longmapsto  \wedge \\
+	CS^{'}=CS[x\longmapsto(none,\epsilon)] \wedge \\ 
+	DS^{'}= ...
+	\end{aligned}
+}
+\end{equation}
+
+Network Director
+\begin{equation}\label{NetworkDirector}
+\frac
+{
+	\begin{aligned}
+	NS = Q \wedge  no\_software\_action \wedge \\
+	(y,m) = first\_message(Q) \wedge 
+	DS(y)=(v,q,\sigma)
+	\end{aligned}
+}
+{
+	\begin{aligned}
+	G\overset{\tau}{\rightarrow}(DS\longmapsto DS',Q\longmapsto Q') \wedge \\
+	DS^{'}=DS[y\longmapsto(v,q\oplus m,\sigma)] \wedge \\ Q^{'}=Q \backslash (y,m)
+	\end{aligned}
+}
+\end{equation}
+
+
+Go To
+
+\begin{equation}\label{GoTo}
+\frac
+{
+	DS(x)=(v,q,(p \ goto \ m^{'})|\sigma) \wedge CS(p)=(m,\epsilon)
+}
+{
+	\begin{aligned}
+	G\overset{\tau}{\Rightarrow}G[DS\longmapsto DS^{'}, CS\longmapsto CS^{'}) \wedge \\
+	DS^{'}=DS[x\longmapsto(c,q,\sigma)] \wedge \\ CS^{'}=CS[p\longmapsto(m^{'},\epsilon)]
+	\end{aligned}
+}
+\end{equation}
+
+
+Delay Statement
+\begin{equation}\label{DelayStatement}
+\frac
+{
+	DS(x)=(v,q,(delay(d)|\sigma)) 
+}
+{
+	...
+}
+\end{equation}
+
+\begin{equation}\label{ContinuousVariableAssignment}
+\frac
+{
+	CS(x)=(m,(cvar=expr)|\sigma)
+}
+{
+	(DS,CS)\overset{\tau,cvar=eval(expr)}{\Rightarrow}(DS,CS[x\longmapsto(m,\sigma)])
+}
+\end{equation}
+
+\begin{equation}\label{DiscreteVariableAssignment}
+\frac
+{
+	DS(x)=(v,q,(dvar=expr|\sigma))
+}
+{
+	(DS,CS)\overset{\tau}{\Rightarrow}(DS^{'},CS) \wedge DS^{'}=DS[x \longmapsto(v[dvar\longmapsto eval(expr)],q,\sigma)]
+}
+\end{equation}
+
+\begin{equation}\label{ConditionalTrue}
+\frac
+{
+	DS(x)=(v,q,(if expr \sigma else \sigma ^{'} |\sigma ^{''})) \wedge eval(expr) = True
+}
+{
+	(DS,CS)\overset{\tau}{\Rightarrow}(DS^{'},CS) \wedge DS^{'}=DS[x \longmapsto(v,q,\sigma \oplus \sigma ^{''})]
+}
+\end{equation}
+
+\begin{equation}\label{ConditionalFalse}
+\frac
+{
+	DS(x)=(v,q,(if expr \sigma else \sigma ^{'} |\sigma ^{''})) \wedge eval(expr) = False
+}
+{
+	(DS,CS)\overset{\tau}{\Rightarrow}(DS^{'},CS) \wedge DS^{'}=DS[x \longmapsto(v,q,\sigma ^{'} \oplus \sigma ^{''})]
+}
+\end{equation}
+
+
+\end{document}
