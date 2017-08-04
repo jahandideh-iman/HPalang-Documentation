@@ -19,7 +19,7 @@ acquire\_timer(p) acquires a free timer variable from the give variable pool. \\
 release\_timer(t,p) releases timer variable t to the give variable pool. \\
 \\
 is\_direct(x,y) returns true if the x communicates with y directly (e.g. through wire), returns false otherwise. \\
-is\_nat(x,y) returns true if the x communicates with y through NAT, returns false otherwise. \\
+is\_can(x,y) returns true if the x communicates with y through CAN, returns false otherwise. \\
 \\
 guard(x\textsubscript{p},m) returns the guard for mode m in the physical actor x\textsubscript{p} \\
 actions(x\textsubscript{p},m) returns the actions for mode m in the physical actor x\textsubscript{p} \\
@@ -258,7 +258,7 @@ Direct Message Send (Software Actor)
 }
 \end{equation}
 \\\\
-NAT Message Send (Software Actor)
+CAN Message Send (Software Actor)
 \begin{equation}
 \frac
 {
@@ -293,7 +293,7 @@ Direct Message Send (Physical Actor)
 }
 \end{equation}
 \\\\
-NAT Message Send (Physical Actor)
+CAN Message Send (Physical Actor)
 \begin{equation}
 \frac
 {
